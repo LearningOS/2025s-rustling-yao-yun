@@ -2,7 +2,6 @@
 	queue
 	This question requires you to use queues to implement the functionality of the stac
 */
-// I AM NOT DONE
 
 #[derive(Debug)]
 pub struct Queue<T> {
@@ -52,30 +51,39 @@ impl<T> Default for Queue<T> {
     }
 }
 
-pub struct myStack<T>
+pub struct MyStack<T>
 {
-	//TODO
-	q1:Queue<T>,
-	q2:Queue<T>
+	queues: [Queue<T>; 2],
+    active_idx: usize,
 }
-impl<T> myStack<T> {
+impl<T> MyStack<T> {
     pub fn new() -> Self {
         Self {
-			//TODO
-			q1:Queue::<T>::new(),
-			q2:Queue::<T>::new()
+            queues: [Queue::new(), Queue::new()],
+            active_idx: 0,
         }
     }
     pub fn push(&mut self, elem: T) {
-        //TODO
+        self.active_queue().enqueue(elem);
     }
     pub fn pop(&mut self) -> Result<T, &str> {
-        //TODO
-		Err("Stack is empty")
+        while let Ok(elem) = self.active_queue().dequeue() {
+            if self.active_queue().is_empty() {
+                self.active_idx = 1 - self.active_idx;
+                return Ok(elem);
+            } 
+            self.inactive_queue().enqueue(elem);
+        }
+        Err("Stack is empty")
     }
     pub fn is_empty(&self) -> bool {
-		//TODO
-        true
+		self.queues[self.active_idx].is_empty()
+    }
+    fn active_queue(&mut self) -> &mut Queue<T> {
+        &mut self.queues[self.active_idx]
+    }
+    fn inactive_queue(&mut self) -> &mut Queue<T> {
+        &mut self.queues[1 - self.active_idx]
     }
 }
 
@@ -85,7 +93,7 @@ mod tests {
 	
 	#[test]
 	fn test_queue(){
-		let mut s = myStack::<i32>::new();
+		let mut s = MyStack::<i32>::new();
 		assert_eq!(s.pop(), Err("Stack is empty"));
         s.push(1);
         s.push(2);
