@@ -2,10 +2,10 @@
 	heap
 	This question requires you to implement a binary heap function
 */
-// I AM NOT DONE
 
 use std::cmp::Ord;
 use std::default::Default;
+use std::mem::swap;
 
 pub struct Heap<T>
 where
@@ -37,7 +37,17 @@ where
     }
 
     pub fn add(&mut self, value: T) {
-        //TODO
+        self.items.push(value);
+        self.count += 1;
+        // swim
+        let mut new_idx = self.count;
+        let mut parent_idx = self.parent_idx(new_idx);
+
+        while new_idx != 1 && (self.comparator)(&self.items[new_idx], &self.items[parent_idx]) {
+            self.items.swap(new_idx, parent_idx);
+            new_idx = parent_idx;
+            parent_idx = self.parent_idx(new_idx);
+        }
     }
 
     fn parent_idx(&self, idx: usize) -> usize {
@@ -57,8 +67,18 @@ where
     }
 
     fn smallest_child_idx(&self, idx: usize) -> usize {
-        //TODO
-		0
+        let left_idx = self.left_child_idx(idx);
+        let right_idx = self.right_child_idx(idx);
+        if left_idx > self.count { return idx; }
+        else if right_idx > self.count { return left_idx; }
+        else {
+            let left_smallest_idx = self.smallest_child_idx(left_idx);
+            let right_smallest_idx = self.smallest_child_idx(right_idx);
+            match (self.comparator)(&self.items[left_idx], &self.items[right_idx]) {
+                true => left_idx, 
+                false => right_idx
+            }
+        }
     }
 }
 
@@ -84,8 +104,26 @@ where
     type Item = T;
 
     fn next(&mut self) -> Option<T> {
-        //TODO
-		None
+        if self.count == 0 { return None }
+        self.items.swap(self.count,1);
+        let ret = self.items.pop();
+        self.count -= 1;
+
+        // sink 
+        let mut sink_idx = 1; 
+        let left_idx = self.left_child_idx(sink_idx);
+        let right_idx = self.right_child_idx(sink_idx);
+
+        if self.children_present(sink_idx)
+        {
+            let smallest_child_idx = self.smallest_child_idx(sink_idx); 
+            if (self.comparator)(&self.items[smallest_child_idx], &self.items[sink_idx]) {
+                self.items.swap(smallest_child_idx, sink_idx);
+                sink_idx = smallest_child_idx;
+            }
+        }
+
+        ret
     }
 }
 
@@ -140,6 +178,7 @@ mod tests {
     #[test]
     fn test_max_heap() {
         let mut heap = MaxHeap::new();
+        println!("heap: {:?}", heap.items);
         heap.add(4);
         heap.add(2);
         heap.add(9);
